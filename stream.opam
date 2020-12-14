@@ -1,0 +1,26 @@
+opam-version: "2.0"
+name: "stream"
+version: "1.0"
+synopsis: "data structure like Seq but more lazily evaluated"
+description: """
+stream is like Seq but more lazily evaluated, though calling a function with the
+same parameters multiple times will create different streams and will be
+evaluated separately
+"""
+maintainer: "Nikunj Chawla <nikchawla312@gmail.com>"
+authors: "Nikunj Chawla <nikchawla312@gmail.com>"
+homepage: "https://github.com/nik312123/stream"
+dev-repo: "git+https://github.com/nik312123/stream.git"
+bug-reports: "https://github.com/nik312123/stream/issues"
+doc: ""
+depends: [
+    "ocaml" {>= "4.08.1"}
+    "dune" {>= "2.7.1"}
+    "base-bytes"
+    "base-unix"
+]
+build: [
+    ["dune" "build" "-p" name "-j" jobs]
+    ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+    ["dune" "build" "@doc" "-p" name "-j" jobs] {with-doc}
+]
