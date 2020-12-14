@@ -3,6 +3,6 @@
     (flags (:standard -w -32))))
 
 (library
- (name stream)
- (public_name stream)
+ (name lazyStream)
+ (public_name lazyStream)
  (libraries ))

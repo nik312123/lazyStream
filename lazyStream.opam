@@ -1,17 +1,17 @@
 opam-version: "2.0"
-name: "stream"
+name: "lazyStream"
 version: "1.0"
 synopsis: "data structure like Seq but more lazily evaluated"
 description: """
-stream is like Seq but more lazily evaluated, though calling a function with the
-same parameters multiple times will create different streams and will be
+lazyStream is like Seq but more lazily evaluated, though calling a function with
+the same parameters multiple times will create different streams and will be
 evaluated separately
 """
 maintainer: "Nikunj Chawla <nikchawla312@gmail.com>"
 authors: "Nikunj Chawla <nikchawla312@gmail.com>"
-homepage: "https://github.com/nik312123/stream"
-dev-repo: "git+https://github.com/nik312123/stream.git"
-bug-reports: "https://github.com/nik312123/stream/issues"
+homepage: "https://github.com/nik312123/lazyStream"
+dev-repo: "git+https://github.com/nik312123/lazyStream.git"
+bug-reports: "https://github.com/nik312123/lazyStream/issues"
 doc: ""
 depends: [
     "ocaml" {>= "4.08.1"}
