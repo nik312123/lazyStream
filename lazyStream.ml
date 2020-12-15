@@ -2,9 +2,9 @@ type 'a t = Nil | Cons of 'a * 'a t lazy_t
 
 let empty: 'a t = Nil
 
-let cons (el: 'a) (s: 'a t): 'a t = Cons (el, lazy s)
-
 let is_empty (s: 'a t): bool = s = Nil
+
+let cons (el: 'a) (s: 'a t): 'a t = Cons (el, lazy s)
 
 let rec from (start: 'a) (next: 'a -> 'a): 'a t =
     Cons (start, lazy (from (next start) next))
@@ -47,13 +47,13 @@ let mapi (map_fn: int -> 'a -> 'b): 'a t -> 'b t =
 
 let map (map_fn: 'a -> 'b): 'a t -> 'b t = mapi (fun _ el -> map_fn el)
 
-let rec filter_map (fm_fun: 'a -> 'b option) (s: 'a t): 'b t = match s with
+let rec filter_map (fm_fn: 'a -> 'b option) (s: 'a t): 'b t = match s with
     | Nil -> Nil
     | Cons (x, xs) ->
-        let fm_fun_res = fm_fun x in
-        (match fm_fun_res with
-            | None -> filter_map fm_fun (Lazy.force xs)
-            | Some v -> Cons (v, lazy (filter_map fm_fun (Lazy.force xs)))
+        let fm_fn_res = fm_fn x in
+        (match fm_fn_res with
+            | None -> filter_map fm_fn (Lazy.force xs)
+            | Some v -> Cons (v, lazy (filter_map fm_fn (Lazy.force xs)))
         )
 
 let rec flat_map (fm_fn: 'a -> 'b t): 'a t -> 'b t = function
@@ -76,18 +76,18 @@ let rec map_mult (map_fns: ('a -> 'c -> 'b) list) (shared_fn: 'a -> 'c): 'a t ->
             (map_mult_aux map_fns (shared_fn x) x)
             (lazy (map_mult map_fns shared_fn (Lazy.force xs)))
 
-let rec zip (zip_fun: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t): 'c t = match s1, s2 with
+let rec zip (zip_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t): 'c t = match s1, s2 with
     | Nil, _ -> Nil
     | _, Nil -> Nil
     | Cons (s1_el, s1'), Cons (s2_el, s2') ->
-        Cons (zip_fun s1_el s2_el, lazy (zip zip_fun (Lazy.force s1') (Lazy.force s2')))
+        Cons (zip_fn s1_el s2_el, lazy (zip zip_fn (Lazy.force s1') (Lazy.force s2')))
 
-let rec zip_long (zip_fun: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): 'c t = match s1, s2 with
+let rec zip_long (zip_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): 'c t = match s1, s2 with
     | Nil, Nil -> Nil
-    | Nil, Cons (s2_el, s2') -> Cons (zip_fun s1_pl s2_el, lazy (zip_long zip_fun Nil (Lazy.force s2') s1_pl s2_pl))
-    | Cons (s1_el, s1'), Nil -> Cons (zip_fun s1_el s2_pl, lazy (zip_long zip_fun (Lazy.force s1') Nil s1_pl s2_pl))
+    | Nil, Cons (s2_el, s2') -> Cons (zip_fn s1_pl s2_el, lazy (zip_long zip_fn Nil (Lazy.force s2') s1_pl s2_pl))
+    | Cons (s1_el, s1'), Nil -> Cons (zip_fn s1_el s2_pl, lazy (zip_long zip_fn (Lazy.force s1') Nil s1_pl s2_pl))
     | Cons (s1_el, s1'), Cons (s2_el, s2') ->
-        Cons (zip_fun s1_el s2_el, lazy (zip_long zip_fun (Lazy.force s1') (Lazy.force s2') s1_pl s2_pl))
+        Cons (zip_fn s1_el s2_el, lazy (zip_long zip_fn (Lazy.force s1') (Lazy.force s2') s1_pl s2_pl))
 
 let hd: 'a t -> 'a = function
     | Nil -> failwith "hd"
@@ -105,6 +105,14 @@ let take (n: int) (s: 'a t): 'a list =
             | Cons (x, xs) -> take_aux (n - 1) (x::acc) (Lazy.force xs)
     in take_aux n [] s
 
+let take_except (n: int) (s: 'a t): 'a list =
+    let rec take_aux (n: int) (acc: 'a list) (s: 'a t): 'a list =
+        if n <= 0 then List.rev acc
+        else match s with
+            | Nil -> failwith "take_except"
+            | Cons (x, xs) -> take_aux (n - 1) (x::acc) (Lazy.force xs)
+    in take_aux n [] s
+
 let take_all (s: 'a t): 'a list =
     let rec take_aux (acc: 'a list): 'a t -> 'a list = function
         | Nil -> List.rev acc
@@ -113,7 +121,13 @@ let take_all (s: 'a t): 'a list =
 
 let rec drop (n: int): 'a t -> 'a t = function
     | Nil -> Nil
+    | s when n <= 0 -> s
     | Cons (_, xs) -> drop (n - 1) (Lazy.force xs)
+
+let rec drop_except (n: int): 'a t -> 'a t = function
+    | Nil -> failwith "drop_except"
+    | s when n <= 0 -> s
+    | Cons (_, xs) -> drop_except (n - 1) (Lazy.force xs)
 
 let rec to_seq: 'a t -> 'a Seq.t = function
     | Nil -> fun () -> Seq.Nil
@@ -147,9 +161,9 @@ let of_bytes (b: bytes): char t =
         else Cons (Bytes.get b i, lazy (of_bytes_aux (i + 1)))
     in of_bytes_aux 0
 
-let rec to_channel (chan: out_channel): char t -> unit = function
+let rec output_to_channel (chan: out_channel): char t -> unit = function
     | Nil -> ()
-    | Cons (x, xs) -> output_char chan x; to_channel chan (Lazy.force xs)
+    | Cons (x, xs) -> output_char chan x; output_to_channel chan (Lazy.force xs)
 
 let rec of_channel (chan: in_channel): char t =
     try Cons(input_char chan, lazy (of_channel chan))
@@ -163,6 +177,10 @@ let repeat_elements (n: int) (s: 'a t): 'a t =
             then Cons(x, lazy (repeat_elements_aux (i + 1) rest_s))
             else repeat_elements_aux 0 (Lazy.force xs)
     in repeat_elements_aux 0 s
+
+let rec repeat_stream (n: int) (s: 'a t): 'a t =
+    if n <= 0 then Nil
+    else append s (repeat_stream (n - 1) s)
 
 let cartesian_product (s1: 'a t) (s2: 'b t): ('a * 'b) t =
     let rec s2_inner (s1_el: 'a): 'b t -> ('a * 'b) t = function
@@ -183,7 +201,11 @@ let rec fold_left (fold_fn: 'b -> 'a -> 'b) (acc: 'b): 'a t -> 'b = function
     | Nil -> acc
     | Cons (x, xs) -> fold_left fold_fn (fold_fn acc x) (Lazy.force xs)
 
-let fold_right (fold_fn: 'a -> 'b -> 'b) (s: 'a t) (base: 'b): 'b = fold_left (Fun.flip fold_fn) base (rev s)
+let rec fold_left_lazy (fold_fn: 'b -> 'a -> 'b) (acc: 'b): 'a t -> 'b t = function
+    | Nil -> Cons (acc, lazy Nil)
+    | Cons (x, xs) -> Cons (acc, lazy (fold_left_lazy fold_fn (fold_fn acc x) (Lazy.force xs)))
+
+let fold_right (fold_fn: 'a -> 'b -> 'b) (s: 'a t) (acc: 'b): 'b = fold_left (Fun.flip fold_fn) acc (rev s)
 
 let length (s: 'a t): int =
     let rec length_aux (acc: int): 'a t -> int = function
@@ -207,13 +229,13 @@ let nth_opt (s: 'a t) (n: int): 'a option =
         | Nil -> None
         | Cons (x, _) -> Some x
 
-let nth (s: 'a t) (n: int): 'a = nth_opt s n |> opt_get
+let nth (s: 'a t) (n: int): 'a = match nth_opt s n with
+    | None -> invalid_arg "LazyStream.nth"
+    | Some v -> v
 
 let init (len: int) (init_fn: int -> 'a): 'a t =
-    let rec init_aux (i: int): 'a t =
-        if i >= len then Nil
-        else Cons (init_fn i, lazy (init_aux (i + 1)))
-    in init_aux 0
+    if len < 0 then invalid_arg "LazyStream.init"
+    else map init_fn (range_int 0 (len - 1) 1)
 
 let rev_append (s1: 'a t) (s2: 'a t): 'a t = append (rev s1) s2
 
@@ -223,13 +245,13 @@ let rec concat (ss: 'a t t): 'a t = match ss with
     | Nil -> Nil
     | Cons (x, xs) -> append x (concat (Lazy.force xs))
 
-let rec concat_lazy (ss: 'a t t lazy_t): 'a t = match Lazy.force ss with
+let rec concat_lazy (ss: 'a t t): 'a t = match ss with
     | Nil -> Nil
-    | Cons (x, xs) -> append_lazy x (lazy (concat_lazy xs))
+    | Cons (x, xs) -> append_lazy x (lazy (concat_lazy (Lazy.force xs)))
 
 let flatten: 'a t t -> 'a t = concat
 
-let flatten_lazy: 'a t t lazy_t -> 'a t = concat_lazy
+let flatten_lazy: 'a t t -> 'a t = concat_lazy
 
 let iteri (iter_fn: int -> 'a -> unit) (s: 'a t): unit =
     let rec iter_i_aux (i: int): 'a t -> unit = function
@@ -243,23 +265,43 @@ let make_pair (p1: 'a) (p2: 'b): 'a * 'b = (p1, p2)
 
 let combine (s1: 'a t) (s2: 'b t): ('a * 'b) t = zip make_pair s1 s2
 
+let combine_long (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): ('a * 'b) t = zip_long make_pair s1 s2 s1_pl s2_pl
+
 let iter2 (iter_fn: 'a -> 'b -> unit) (s1: 'a t) (s2: 'b t): unit =
     iter (fun (s1_el, s2_el) -> iter_fn s1_el s2_el) (combine s1 s2)
+
+let iter2_long (iter_fn: 'a -> 'b -> unit) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): unit =
+    iter (fun (s1_el, s2_el) -> iter_fn s1_el s2_el) (combine_long s1 s2 s1_pl s2_pl)
 
 let map2 (map_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t): 'c t =
     map (fun (s1_el, s2_el) -> map_fn s1_el s2_el) (combine s1 s2)
 
+let map2_long (map_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): 'c t =
+    map (fun (s1_el, s2_el) -> map_fn s1_el s2_el) (combine_long s1 s2 s1_pl s2_pl)
+
 let rev_map2 (map_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t): 'c t = rev (map2 map_fn s1 s2)
+
+let rev_map2_long (map_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): 'c t =
+    rev (map2_long map_fn s1 s2 s1_pl s2_pl)
 
 let fold_left2 (fold_fn: 'c -> 'a -> 'b -> 'c) (acc: 'c) (s1: 'a t) (s2: 'b t): 'c =
     fold_left (fun acc (s1_el, s2_el) -> fold_fn acc s1_el s2_el) acc (combine s1 s2)
 
+let fold_left2_lazy (fold_fn: 'c -> 'a -> 'b -> 'c) (acc: 'c) (s1: 'a t) (s2: 'b t): 'c t =
+    fold_left_lazy (fun acc (s1_el, s2_el) -> fold_fn acc s1_el s2_el) acc (combine s1 s2)
+
+let fold_left2_long (fold_fn: 'c -> 'a -> 'b -> 'c) (acc: 'c) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): 'c =
+    fold_left (fun acc (s1_el, s2_el) -> fold_fn acc s1_el s2_el) acc (combine_long s1 s2 s1_pl s2_pl)
+
+let fold_left2_long_lazy (fold_fn: 'c -> 'a -> 'b -> 'c) (acc: 'c) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): 'c t =
+    fold_left_lazy (fun acc (s1_el, s2_el) -> fold_fn acc s1_el s2_el) acc (combine_long s1 s2 s1_pl s2_pl)
+
 let rec for_all (pred: 'a -> bool): 'a t -> bool = function
     | Nil -> true
     | Cons (x, xs) ->
-        if not (pred x)
-        then false
-        else for_all pred (Lazy.force xs)
+        if pred x
+        then for_all pred (Lazy.force xs)
+        else false
 
 let rec find_map (map_fn: 'a -> 'b) (base: 'b) (pred: 'a -> bool): 'a t -> 'b = function
     | Nil -> base
@@ -313,15 +355,15 @@ let rec remove_assoc (el_key: 'a): ('a * 'b) t -> ('a * 'b) t = function
     | Nil -> Nil
     | Cons ((key, value), xs) ->
         if key = el_key
-        then Cons ((key, value), lazy (remove_assoc el_key (Lazy.force xs)))
-        else Lazy.force xs
+        then Lazy.force xs
+        else Cons ((key, value), lazy (remove_assoc el_key (Lazy.force xs)))
 
 let rec remove_assq (el_key: 'a): ('a * 'b) t -> ('a * 'b) t = function
     | Nil -> Nil
     | Cons ((key, value), xs) ->
         if key == el_key
-        then Cons ((key, value), lazy (remove_assq el_key (Lazy.force xs)))
-        else Lazy.force xs
+        then Lazy.force xs
+        else Cons ((key, value), lazy (remove_assq el_key (Lazy.force xs)))
 
 let rec split (s: ('a * 'b) t): 'a t * 'b t = match s with
     | Nil -> (Nil, Nil)
