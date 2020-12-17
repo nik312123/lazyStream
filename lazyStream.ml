@@ -50,8 +50,7 @@ let map (map_fn: 'a -> 'b): 'a t -> 'b t = mapi (fun _ el -> map_fn el)
 let rec filter_map (fm_fn: 'a -> 'b option) (s: 'a t): 'b t = match s with
     | Nil -> Nil
     | Cons (x, xs) ->
-        let fm_fn_res = fm_fn x in
-        (match fm_fn_res with
+        (match fm_fn x with
             | None -> filter_map fm_fn (Lazy.force xs)
             | Some v -> Cons (v, lazy (filter_map fm_fn (Lazy.force xs)))
         )
@@ -64,23 +63,19 @@ let rec flat_map_lazy (fm_fn: 'a -> 'b t): 'a t -> 'b t = function
     | Nil -> Nil
     | Cons(x, xs) -> append_lazy (fm_fn x) (lazy (flat_map_lazy fm_fn (Lazy.force xs)))
 
-let rec map_mult_aux (rest_map_fns: ('a -> 'c -> 'b) list) (shared: 'c) (el: 'a): 'b t =
-    match rest_map_fns with
-        | [] -> Nil
-        | map_fn::map_fns' -> Cons (map_fn el shared, lazy (map_mult_aux map_fns' shared el))
+let rec map_mult_aux (rest_map_fns: ('a -> 'c -> 'b) list) (shared: 'c) (el: 'a): 'b t = match rest_map_fns with
+    | [] -> Nil
+    | map_fn::map_fns' -> Cons (map_fn el shared, lazy (map_mult_aux map_fns' shared el))
 
 let rec map_mult (map_fns: ('a -> 'c -> 'b) list) (shared_fn: 'a -> 'c): 'a t -> 'b t = function
     | Nil -> Nil
     | Cons (x, xs) ->
-        append_lazy
-            (map_mult_aux map_fns (shared_fn x) x)
-            (lazy (map_mult map_fns shared_fn (Lazy.force xs)))
+        append_lazy (map_mult_aux map_fns (shared_fn x) x) (lazy (map_mult map_fns shared_fn (Lazy.force xs)))
 
 let rec zip (zip_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t): 'c t = match s1, s2 with
-    | Nil, _ -> Nil
-    | _, Nil -> Nil
     | Cons (s1_el, s1'), Cons (s2_el, s2') ->
         Cons (zip_fn s1_el s2_el, lazy (zip zip_fn (Lazy.force s1') (Lazy.force s2')))
+    | _ -> Nil
 
 let rec zip_long (zip_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): 'c t = match s1, s2 with
     | Nil, Nil -> Nil
@@ -97,21 +92,21 @@ let tl: 'a t -> 'a t = function
     | Nil -> failwith "tl"
     | Cons (_, xs) -> Lazy.force xs
 
-let take (n: int) (s: 'a t): 'a list =
+let take (n: int): 'a t -> 'a list =
     let rec take_aux (n: int) (acc: 'a list) (s: 'a t): 'a list =
         if n <= 0 then List.rev acc
         else match s with
             | Nil -> List.rev acc
             | Cons (x, xs) -> take_aux (n - 1) (x::acc) (Lazy.force xs)
-    in take_aux n [] s
+    in take_aux n []
 
-let take_except (n: int) (s: 'a t): 'a list =
+let take_except (n: int): 'a t -> 'a list =
     let rec take_aux (n: int) (acc: 'a list) (s: 'a t): 'a list =
         if n <= 0 then List.rev acc
         else match s with
             | Nil -> failwith "take_except"
             | Cons (x, xs) -> take_aux (n - 1) (x::acc) (Lazy.force xs)
-    in take_aux n [] s
+    in take_aux n []
 
 let take_all (s: 'a t): 'a list =
     let rec take_aux (acc: 'a list): 'a t -> 'a list = function
@@ -219,7 +214,7 @@ let rec compare_lengths (s1: 'a t) (s2: 'b t): int = match s1, s2 with
     | _, Nil -> 1
     | Cons (_, s1'), Cons (_, s2') -> compare_lengths (Lazy.force s1') (Lazy.force s2')
 
-let opt_get: 'a option -> 'a = function
+let opt_get_nf: 'a option -> 'a = function
     | None -> raise Not_found
     | Some v -> v
 
@@ -267,17 +262,17 @@ let combine (s1: 'a t) (s2: 'b t): ('a * 'b) t = zip make_pair s1 s2
 
 let combine_long (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): ('a * 'b) t = zip_long make_pair s1 s2 s1_pl s2_pl
 
-let iter2 (iter_fn: 'a -> 'b -> unit) (s1: 'a t) (s2: 'b t): unit =
-    iter (fun (s1_el, s2_el) -> iter_fn s1_el s2_el) (combine s1 s2)
+let args_fn_to_pair_fn (fn: 'a -> 'b -> 'c) ((p1, p2): 'a * 'b): 'c = fn p1 p2
+
+let iter2 (iter_fn: 'a -> 'b -> unit) (s1: 'a t) (s2: 'b t): unit = iter (args_fn_to_pair_fn iter_fn) (combine s1 s2)
 
 let iter2_long (iter_fn: 'a -> 'b -> unit) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): unit =
-    iter (fun (s1_el, s2_el) -> iter_fn s1_el s2_el) (combine_long s1 s2 s1_pl s2_pl)
+    iter (args_fn_to_pair_fn iter_fn) (combine_long s1 s2 s1_pl s2_pl)
 
-let map2 (map_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t): 'c t =
-    map (fun (s1_el, s2_el) -> map_fn s1_el s2_el) (combine s1 s2)
+let map2 (map_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t): 'c t = map (args_fn_to_pair_fn map_fn) (combine s1 s2)
 
 let map2_long (map_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): 'c t =
-    map (fun (s1_el, s2_el) -> map_fn s1_el s2_el) (combine_long s1 s2 s1_pl s2_pl)
+    map (args_fn_to_pair_fn map_fn) (combine_long s1 s2 s1_pl s2_pl)
 
 let rev_map2 (map_fn: 'a -> 'b -> 'c) (s1: 'a t) (s2: 'b t): 'c t = rev (map2 map_fn s1 s2)
 
@@ -313,10 +308,10 @@ let rec find_map (map_fn: 'a -> 'b) (base: 'b) (pred: 'a -> bool): 'a t -> 'b = 
 let exists (pred: 'a -> bool): 'a t -> bool = find_map (Fun.const true) false pred
 
 let for_all2 (pred: 'a -> 'b -> bool) (s1: 'a t) (s2: 'b t): bool =
-    for_all (fun (s1_el, s2_el) -> pred s1_el s2_el) (combine s1 s2)
+    for_all (args_fn_to_pair_fn pred) (combine s1 s2)
 
 let exists2 (pred: 'a -> 'b -> bool) (s1: 'a t) (s2: 'b t): bool =
-    exists (fun (s1_el, s2_el) -> pred s1_el s2_el) (combine s1 s2)
+    exists (args_fn_to_pair_fn pred) (combine s1 s2)
 
 let mem (el: 'a): 'a t -> bool = exists ((=) el)
 
@@ -324,7 +319,7 @@ let memq (el: 'a): 'a t -> bool = exists ((==) el)
 
 let find_opt (pred: 'a -> bool): 'a t -> 'a option = find_map Option.some None pred
 
-let find (pred: 'a -> bool) (s: 'a t) = find_opt pred s |> opt_get
+let find (pred: 'a -> bool) (s: 'a t) = find_opt pred s |> opt_get_nf
 
 let partition (pred: 'a -> bool) (s: 'a t): 'a t * 'a t =
     let rec partition_aux ((true_acc, false_acc): 'a t * 'a t): 'a t -> 'a t * 'a t = function
@@ -338,18 +333,18 @@ let partition (pred: 'a -> bool) (s: 'a t): 'a t * 'a t =
 let assoc_opt (el_key: 'a): ('a * 'b) t -> 'b option =
     find_map (fun (_, value) -> Some value) None (fun (key, _) -> el_key = key)
 
-let assoc (el_key: 'a) (as_s: ('a * 'b) t): 'b = assoc_opt el_key as_s |> opt_get
+let assoc (el_key: 'a) (as_s: ('a * 'b) t): 'b = assoc_opt el_key as_s |> opt_get_nf
 
 let assq_opt (el_key: 'a): ('a * 'b) t -> 'b option =
     find_map (fun (_, value) -> Some value) None (fun (key, _) -> el_key == key)
 
-let assq (el_key: 'a) (as_s: ('a * 'b) t): 'b = assq_opt el_key as_s |> opt_get
+let assq (el_key: 'a) (as_s: ('a * 'b) t): 'b = assq_opt el_key as_s |> opt_get_nf
 
 let mem_assoc (el_key: 'a): ('a * 'b) t -> bool =
-    find_map (fun (_, _) -> true) false (fun (key, _) -> el_key = key)
+    find_map (Fun.const true) false (fun (key, _) -> el_key = key)
 
 let mem_assq (el_key: 'a): ('a * 'b) t -> bool =
-    find_map (fun (_, _) -> true) false (fun (key, _) -> el_key == key)
+    find_map (Fun.const true) false (fun (key, _) -> el_key == key)
 
 let rec remove_assoc (el_key: 'a): ('a * 'b) t -> ('a * 'b) t = function
     | Nil -> Nil
