@@ -938,6 +938,35 @@ val remove_assq: 'a -> ('a * 'b) t -> ('a * 'b) t
 val split: ('a * 'b) t -> 'a t * 'b t
 
 (**
+    [compare] returns 0 if [s1] is equal to [s2], a negative integer if [s1] is less than [s2], and a positive integer
+    if [s1] is greater than [s2]
+    
+    This involves an immediate traversal over all of the elements of both streams until the end of one of the streams is
+    reached or a pair of adjacent elements between the two streams are found to be not equivalent, meaning that this
+    function does not terminate on two equivalent infinite streams
+    @param compare_fn The comparison function that returns 0 if its arguments compare as equal, a positive integer if
+                      the first is greater, and a negative integer if the first is smaller.
+    @param s1         The stream on the left side of the comparison
+    @param s2         The stream on the right side of the comparison
+    @return 0 if [s1] is equal to [s2], a negative integer if [s1] is less than [s2], and a positive integer if [s1] is
+    greater than [s2]
+*)
+val compare: ('a -> 'a -> int) -> 'a t -> 'a t -> int
+
+(**
+    [compare] returns [true] if [s1] is equal to [s2]
+    
+    This involves an immediate traversal over all of the elements of both streams until the end of one of the streams is
+    reached or a pair of adjacent elements between the two streams are found to be not equivalent, meaning that this
+    function does not terminate on two equivalent infinite streams
+    @param equal_fn The comparison function that returns true if its arguments compare as equal
+    @param s1       The stream on the left side of the comparison
+    @param s2       The stream on the right side of the comparison
+    @return [true] if [s1] is equal to [s2]
+*)
+val equals: ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+
+(**
     [sort] sorts the given stream in increasing order according to a comparison function. The comparison function must
     return 0 if its arguments compare as equal, a positive integer if the first is greater, and a negative integer if
     the first is smaller. The resulting stream is sorted in increasing order. [sort] is guaranteed to run in constant
