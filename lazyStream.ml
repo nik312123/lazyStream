@@ -321,14 +321,19 @@ let find_opt (pred: 'a -> bool): 'a t -> 'a option = find_map Option.some None p
 
 let find (pred: 'a -> bool) (s: 'a t) = find_opt pred s |> opt_get_nf
 
+let rec partition_lazy (pred: 'a -> bool): 'a t -> 'a t lazy_t * 'a t lazy_t = function
+    | Nil -> lazy Nil, lazy Nil
+    | Cons (x, xs) ->
+        let next = lazy (partition_lazy pred (Lazy.force xs)) in
+        let true_acc_next = lazy (Lazy.force next |> fst |> Lazy.force) in
+        let false_acc_next = lazy (Lazy.force next |> snd |> Lazy.force) in
+        if pred x
+        then lazy (Cons (x, true_acc_next)), false_acc_next
+        else true_acc_next, lazy (Cons (x, false_acc_next))
+
 let partition (pred: 'a -> bool) (s: 'a t): 'a t * 'a t =
-    let rec partition_aux ((true_acc, false_acc): 'a t * 'a t): 'a t -> 'a t * 'a t = function
-        | Nil -> (true_acc, false_acc)
-        | Cons (x, xs) ->
-            if pred x
-            then partition_aux (Cons (x, lazy true_acc), false_acc) (Lazy.force xs)
-            else partition_aux (true_acc, Cons (x, lazy false_acc)) (Lazy.force xs)
-    in partition_aux (Nil, Nil) s
+    let (true_acc_lazy, false_acc_lazy) = partition_lazy pred s in
+    Lazy.force true_acc_lazy, Lazy.force false_acc_lazy
 
 let assoc_opt (el_key: 'a): ('a * 'b) t -> 'b option =
     find_map (fun (_, value) -> Some value) None (fun (key, _) -> el_key = key)
