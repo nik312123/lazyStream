@@ -261,6 +261,9 @@ val take_except: int -> 'a t -> 'a list
 
 (**
     [take_all] returns the given stream as a [list]
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param s The stream to convert to a [list]
     @return The given stream as a [list]
 *)
@@ -314,6 +317,9 @@ val of_list: 'a list -> 'a t
 
 (**
     [to_string] converts the given [char] stream to a [string]
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param s The [char] stream to convert to a [string]
     @return [s] as a [string]
 *)
@@ -327,7 +333,10 @@ val to_string: char t -> string
 val of_string: string -> char t
 
 (**
-    [to_string] converts the given [char] stream to [bytes]
+    [to_bytes] converts the given [char] stream to [bytes]
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param s The [char] stream to convert to [bytes]
     @return [s] as [bytes]
 *)
@@ -342,6 +351,9 @@ val of_bytes: bytes -> char t
 
 (**
     [output_to_channel] outputs each of the [char]s in the given [char] stream into the given [out_channel]
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param chan The channel to output the [char]s
     @param s    The stream from which the [char]s are outputted
     @return     unit
@@ -497,8 +509,8 @@ val init: int -> (int -> 'a) -> 'a t
 val rev_append: 'a t -> 'a t -> 'a t
 
 (**
-    [rev_append] reverses [s1] and concatenates it to the computationally-delayed [s2], making this function equivalent to
-    [append_lazy (rev s1) s2]
+    [rev_append] reverses [s1] and concatenates it to the computationally-delayed [s2], making this function equivalent
+    to [append_lazy (rev s1) s2]
     
     This involves an immediate traversal over all of the elements ONLY for [s1], evaluating each of them before getting
     to the end, and not terminating on infinite streams
@@ -537,6 +549,9 @@ val flatten_lazy: 'a t t -> 'a t
 (**
     [iteri] is the same as {!iter}, but [iter_fn] is applied to the index of the element as the first argument and the
     element itself as the second argument
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param iter_fn The iter function to apply to each index-element pair
     @param s       The stream over which to iterate
     @return unit
@@ -545,6 +560,9 @@ val iteri: (int -> 'a -> unit) -> 'a t -> unit
 
 (**
     [iter] applies the function [iter_fn] to each element of the given stream
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param iter_fn The iter function to apply to each element
     @param s       The stream over which to iterate
     @return unit
@@ -576,6 +594,9 @@ val combine_long: 'a t -> 'b t -> 'a -> 'b -> ('a * 'b) t
 (**
     [iter2] applies the function [iter_fn] to each pair of elements from the given streams and ending when one of the
     streams runs out of elements
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param iter_fn The iter function to apply to each pair of elements
     @param s1      The stream whose elements each compose the first element in each pair that is iterated over
     @param s2      The stream whose elements each compose the second element in each pair that is iterated over
@@ -586,6 +607,9 @@ val iter2: ('a -> 'b -> unit) -> 'a t -> 'b t -> unit
 (**
     [iter2_long] applies the function [iter_fn] to each pair of elements from the given streams, using placeholder
     values when one of the streams runs out of elements and ending when both streams run out of values
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param iter_fn The iter function to apply to each pair of elements
     @param s1      The stream whose elements each compose the first element in each pair that is iterated over
     @param s2      The stream whose elements each compose the second element in each pair that is iterated over
@@ -616,6 +640,9 @@ val map2_long: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'a -> 'b -> 'c t
 
 (**
     [rev_map2] is equivalent to [rev (map2 map_fn s1 s2)]
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param map_fn The mapping function to apply to each pair of elements
     @param s1      The stream whose elements each compose the first element in each pair that is used in the mapping
     @param s2      The stream whose elements each compose the second element in each pair that is used in the mapping
@@ -625,6 +652,9 @@ val rev_map2: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
 
 (**
     [rev_map2_long] is equivalent to [rev (map2_long map_fn s1 s2)]
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
     @param map_fn The mapping function to apply to each pair of elements
     @param s1      The stream whose elements each compose the first element in each pair that is used in the mapping
     @param s2      The stream whose elements each compose the second element in each pair that is used in the mapping
@@ -683,63 +713,79 @@ val fold_left2_long: ('c -> 'a -> 'b -> 'c) -> 'c -> 'a t -> 'b t -> 'a -> 'b ->
 val fold_left2_long_lazy: ('c -> 'a -> 'b -> 'c) -> 'c -> 'a t -> 'b t -> 'a -> 'b -> 'c t
 
 (**
-    [for_all] returns true if applying [pred] to each elements of the stream results in true for all of them
+    [for_all] returns [true] if applying [pred] to each elements of the stream results in [true] for all of them
     
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
     @param pred The predicate that all of the elements are checked against
     @param s    The stream whose elements are checked against the predicate
-    @return True if all of the elements of the stream each return true when put into [pred]
+    @return [true] if all of the elements of the stream each return [true] when put into [pred]
 *)
 val for_all: ('a -> bool) -> 'a t -> bool
 
 (**
-    [exists] returns true if applying [pred] to any of the elements of the stream results in true
+    [exists] returns [true] if applying [pred] to any of the elements of the stream results in [true]
+    
+    This involves an immediate traversal over all of the elements until an element meeting the predicate is found,
+    evaluating each of them, and not terminating on infinite streams in which no element matches the predicate
     @param pred The predicate that all of the elements are checked against
     @param s    The stream whose elements are checked against the predicate
-    @return True if any of the elements of the stream return true when put into [pred]
+    @return [true] if any of the elements of the stream return [true] when put into [pred]
 *)
 val exists: ('a -> bool) -> 'a t -> bool
 
 (**
-    [for_all2] returns true if applying [pred] to each pair of adjacent element pairs from the given streams results in
-    true for all of them
+    [for_all2] returns [true] if applying [pred] to each pair of adjacent element pairs from the given streams results
+    in [true] for all of them
     
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
     @param pred The predicate that all of the elements are checked against
     @param s    The stream whose elements are checked against the predicate
-    @return True if all of the adjacent elements from the given streams each return true when put into [pred]
+    @return [true] if all of the adjacent elements from the given streams each return [true] when put into [pred]
 *)
 val for_all2: ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
 
 (**
-    [exists2] returns true if applying [pred] to any of the adjacent element pairs from the given streams results in true
+    [exists2] returns [true] if applying [pred] to any of the adjacent element pairs from the given streams results in
+    [true]
+    
+    This involves an immediate traversal over all of the elements until an element meeting the predicate is found,
+    evaluating each of them, and not terminating on infinite streams in which no element matches the predicate
     @param pred The predicate that all of the elements are checked against
     @param s    The stream whose elements are checked against the predicate
-    @return True if any of the adjacent element pairs from the given streams return true when put into [pred]
+    @return [true] if any of the adjacent element pairs from the given streams return [true] when put into [pred]
 *)
 val exists2: ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
 
 (**
-    [mem] returns true if [el] is equal to an element in the given stream
+    [mem] returns [true] if [el] is equal to an element in the given stream
+    
+    This involves an immediate traversal over all of the elements until an element is found that is equal to the given
+    value, evaluating each of them, and not terminating on infinite streams in which no element is equivalent
     @param el The element to search for in the given stream
     @param s  The stream in which to search for [el]
-    @return true if [el] is equal to an element in the given stream
+    @return [true] if [el] is equal to an element in the given stream
 *)
 val mem: 'a -> 'a t -> bool
 
 (**
     [memq] is the same as {!mem} but uses physical equality instead of structural equality to compare elements
+    
+    This involves an immediate traversal over all of the elements until an element is found that is equal to the given
+    value, evaluating each of them, and not terminating on infinite streams in which no element is equivalent
     @param el The element to search for in the given stream
     @param s  The stream in which to search for [el]
-    @return true if [el] is equal to an element in the given stream
+    @return [true] if [el] is equal to an element in the given stream
 *)
 val memq: 'a -> 'a t -> bool
 
 (**
     [find_opt] returns the first element of [s] that satisfies [pred] wrapped in [Some] or [None] if there is no such
     element
+    
+    This involves an immediate traversal over all of the elements until an element meeting the predicate is found,
+    evaluating each of them, and not terminating on infinite streams in which no element matches the predicate
     @param pred The predicate that all of the elements are checked against
     @param s    The stream that is searched through for an element that satisfies the predicate
     @return The first element of [s] that satisfies [pred] wrapped in [Some] or [None] if there is no such element
@@ -748,6 +794,9 @@ val find_opt: ('a -> bool) -> 'a t -> 'a option
 
 (**
     [find] returns the first element of [s] that satisfies [pred] or raises [Not_found] if there is no such element
+    
+    This involves an immediate traversal over all of the elements until an element meeting the predicate is found,
+    evaluating each of them, and not terminating on infinite streams in which no element matches the predicate
     @param pred The predicate that all of the elements are checked against
     @param s    The stream that is searched through for an element that satisfies the predicate
     @return The first element of [s] that satisfies [pred]
@@ -757,18 +806,36 @@ val find: ('a -> bool) -> 'a t -> 'a
 
 (**
     [partition] returns a pair of streams with the first stream being the stream of all the elements of [s] that satisfy
-    the [pred] and the second being the stream of all the elements of [s] that do not satisfy [pred]; the order of the
+    [pred] and the second being the stream of all the elements of [s] that do not satisfy [pred]; the order of the
     elements in the input list is preserved
+    
+    This involves an immediate traversal over all of the elements until an element meeting the predicate is found and
+    an element not meeting the predicate is found, evaluating each of them, and not terminating on infinite streams in
+    which either there are no elements that meet the predicate or all elements meet the predicate
     @param pred The predicate that all of the elements are checked against
     @param s    The stream that is partitioned into elements that do and do not satisfy the predicate
-    @return a pair of streams with the first stream being the stream of all the elements of [s] that satisfy the [pred]
+    @return A pair of streams with the first stream being the stream of all the elements of [s] that satisfy the [pred]
     and the second being the stream of all the elements of [s] that do not satisfy [pred]
 *)
 val partition: ('a -> bool) -> 'a t -> 'a t * 'a t
 
 (**
+    [partition_lazy] returns a pair of computationally-delayed streams with the first stream being the stream of all the
+    elements of [s] that satisfy [pred] and the second being the stream of all the elements of [s] that do not satisfy
+    [pred]; the order of the elements in the input list is preserved
+    @param pred The predicate that all of the elements are checked against
+    @param s    The stream that is partitioned into elements that do and do not satisfy the predicate
+    @return A pair of computationally-delayed streams with the first stream being the stream of all the elements of [s]
+    that satisfy [pred] and the second being the stream of all the elements of [s] that do not satisfy [pred]
+*)
+val partition_lazy: ('a -> bool) -> 'a t -> 'a t lazy_t * 'a t lazy_t
+
+(**
     [assoc_opt] returns the value associated with [el_key] in the stream of pairs [as_s] wrapped in [Some] or [None] if
     there is no value associated with [el_key] in the [as_s]
+    
+    This involves an immediate traversal over all of the elements until an element with an equivalent key is found,
+    evaluating each of them, and not terminating on infinite streams in which no element has an equivalent key
     @param el_key The key that is searched for in the association stream
     @param as_s   The association stream that is searched through
     @return The value associated with [el_key] in the stream of pairs [as_s] wrapped in [Some] or [None] if there is no
@@ -779,6 +846,9 @@ val assoc_opt: 'a -> ('a * 'b) t -> 'b option
 (**
     [assoc] returns the value associated with [el_key] in the stream of pairs [as_s] or raises [Not_found] if there is
     no value associated with [el_key] in the [as_s]
+    
+    This involves an immediate traversal over all of the elements until an element with an equivalent key is found,
+    evaluating each of them, and not terminating on infinite streams in which no element has an equivalent key
     @param el_key The key that is searched for in the association stream
     @param as_s   The association stream that is searched through
     @return The value associated with [el_key] in the stream of pairs [as_s]
@@ -789,6 +859,9 @@ val assoc: 'a -> ('a * 'b) t -> 'b
 (**
     [assq_opt] is the same as {!assoc_opt} but uses physical equality instead of structural equality to compare elements
     @param el_key The key that is searched for in the association stream
+    
+    This involves an immediate traversal over all of the elements until an element with an equivalent key is found,
+    evaluating each of them, and not terminating on infinite streams in which no element has an equivalent key
     @param as_s   The association stream that is searched through
     @return The value associated with [el_key] in the stream of pairs [as_s] wrapped in [Some] or [None] if there is no
     value associated with [el_key] in the [as_s]
@@ -797,6 +870,9 @@ val assq_opt: 'a -> ('a * 'b) t -> 'b option
 
 (**
     [assq] is the same as {!assoc} but uses physical equality instead of structural equality to compare elements
+    
+    This involves an immediate traversal over all of the elements until an element with an equivalent key is found,
+    evaluating each of them, and not terminating on infinite streams in which no element has an equivalent key
     @param el_key The key that is searched for in the association stream
     @param as_s   The association stream that is searched through
     @return The value associated with [el_key] in the stream of pairs [as_s]
@@ -807,6 +883,10 @@ val assq: 'a -> ('a * 'b) t -> 'b
 (**
     [mem_assoc] returns [true] if there is a value associated with [el_key] in the stream of pairs [as_s] or [false]
     otherwise
+    
+    This involves an immediate traversal over all of the elements until an element is found that has a key equal to the
+    given value, evaluating each of them, and not terminating on infinite streams in which no element has an equivalent
+    key
     @param el_key The key that is searched for in the association stream
     @param as_s   The association stream that is searched through
     @return [true] if there is a value associated with [el_key] in the stream of pairs [as_s] or [false] otherwise
@@ -815,6 +895,10 @@ val mem_assoc: 'a -> ('a * 'b) t -> bool
 
 (**
     [mem_assq] is the same as {!mem_assoc} but uses physical equality instead of structural equality to compare elements
+    
+    This involves an immediate traversal over all of the elements until an element is found that has a key equal to the
+    given value, evaluating each of them, and not terminating on infinite streams in which no element has an equivalent
+    key
     @param el_key The key that is searched for in the association stream
     @param as_s   The association stream that is searched through
     @return [true] if there is a value associated with [el_key] in the stream of pairs [as_s] or [false] otherwise
@@ -823,6 +907,10 @@ val mem_assq: 'a -> ('a * 'b) t -> bool
 
 (**
     [remove_assoc] returns the given stream without the first pair with a key equivalent to [el_key]
+    
+    This involves an immediate traversal over all of the elements until an element is found that has a key equal to the
+    given value, evaluating each of them, and not terminating on infinite streams in which no element has an equivalent
+    key
     @param ell_key The key that is searched for in the association stream
     @param as_s    The association stream that is searched through
     @return The given stream without the first pair with a key equivalent to [el_key]
@@ -832,6 +920,10 @@ val remove_assoc: 'a -> ('a * 'b) t -> ('a * 'b) t
 (**
     [remove_assq] is the same as {!remove_assoc} but uses physical equality instead of structural equality to compare
     elements
+    
+    This involves an immediate traversal over all of the elements until an element is found that has a key equal to the
+    given value, evaluating each of them, and not terminating on infinite streams in which no element has an equivalent
+    key
     @param ell_key The key that is searched for in the association stream
     @param as_s    The association stream that is searched through
     @return The given stream without the first pair with a key equivalent to [el_key]
@@ -863,7 +955,7 @@ val sort: ('a -> 'a -> int) -> 'a t -> 'a t
     
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
-    @param compare_fn The comparison function described above
+    @param compare_fn The comparison function as described in {!sort}
     @param s          The stream to be sorted
 *)
 val stable_sort: ('a -> 'a -> int) -> 'a t -> 'a t
@@ -873,7 +965,7 @@ val stable_sort: ('a -> 'a -> int) -> 'a t -> 'a t
     
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
-    @param compare_fn The comparison function described above
+    @param compare_fn The comparison function as described in {!sort}
     @param s          The stream to be sorted
 *)
 val fast_sort: ('a -> 'a -> int) -> 'a t -> 'a t
@@ -883,7 +975,7 @@ val fast_sort: ('a -> 'a -> int) -> 'a t -> 'a t
     
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
-    @param compare_fn The comparison function described above
+    @param compare_fn The comparison function as described in {!sort}
     @param s          The stream to be sorted
 *)
 val sort_uniq: ('a -> 'a -> int) -> 'a t -> 'a t
@@ -892,5 +984,9 @@ val sort_uniq: ('a -> 'a -> int) -> 'a t -> 'a t
     [merge] merges two streams. Assuming that [s1] and [s2] are sorted according to the comparison function
     [compare_fn], [merge compare_fn s1 s2] will return a sorted stream containing all the elements of [s1] and [s2].
     If several elements compare equal, the elements of [s1] will be before the elements of [s2].
+    @param compare_fn The comparison function  as described in {!sort}
+    @param s1         The first of the two streams that will be merged, takes precedence over [s2] when equal
+    @param s2         The second of the two streams that will be merged
+    @return The result of merging the two given streams
 *)
 val merge: ('a -> 'a -> int) -> 'a t -> 'a t -> 'a t
