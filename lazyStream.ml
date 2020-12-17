@@ -371,6 +371,19 @@ let rec split (s: ('a * 'b) t): 'a t * 'b t = match s with
         let next = lazy (split (Lazy.force xs)) in
         (Cons (p1, lazy (Lazy.force next |> fst)), Cons (p2, lazy (Lazy.force next |> snd)))
 
+let rec compare (compare_fn: 'a -> 'a -> int) (s1: 'a t) (s2: 'a t): int = match s1, s2 with
+    | Nil, Nil -> 0
+    | Nil, _ -> -1
+    | _, Nil -> 1
+    | Cons (s1_el, s1'), Cons (s2_el, s2') ->
+        (match compare_fn s1_el s2_el with
+            | 0 -> compare compare_fn (Lazy.force s1') (Lazy.force s2')
+            | comparison -> comparison
+        )
+
+let equals (equal_fn: 'a -> 'a -> bool) (s1: 'a t) (s2: 'a t): bool =
+    compare (fun s1_el s2_el -> if equal_fn s1_el s2_el then 0 else -1) s1 s2 = 0
+
 let sort (compare_fn: 'a -> 'a -> int) (s: 'a t): 'a t = List.sort compare_fn (to_list s) |> of_list
 
 let stable_sort (compare_fn: 'a -> 'a -> int) (s: 'a t): 'a t = List.stable_sort compare_fn (to_list s) |> of_list
