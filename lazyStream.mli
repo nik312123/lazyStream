@@ -1,7 +1,8 @@
 (**
-    [LazyStream] is a data structure that is like [Seq] but more lazily evaluated, though calling a function from the
-    [LazyStream] module with the same parameters multiple times will create different streams that will be lazily
-    evaluated separately, even if they produce the same result
+    [LazyStream] is a data structure that is like {{:https://tinyurl.com/ocaml-seq-mod} Seq} and
+    {{:https://tinyurl.com/ocaml-stream-mod} Stream} but more lazily evaluated, though calling a function with the same
+    parameters multiple times will create different streams and will be evaluated separately, and more provided
+    functions
     
     All provided [LazyStream] functions lazily evaluate streams or provide lazily-evaluated streams where applicable
     unless otherwise explicitly mentioned
@@ -57,11 +58,11 @@ val from_int: int -> int -> int t
 
 (**
     [from_char] returns an infinite stream of [char]s with the first element being [start] and each successive element
-    being the character with a code of the sum of the previous char code and [inc]
+    being the character with the character code of the sum of the previous character code and [inc]
     @param start The starting [char] of the stream
-    @param inc   The increment added to each previous element's char code to get the char code of the next element
-    @return An infinite stream of [char]s with the first element being [start] and each successive element being the
-    character with a code of the sum of the previous char code and [inc]
+    @param inc   The increment added to each previous element's character code to get the code of the next element
+    @return An infinite stream of [char]s with the first element being [start] and each successive element the character
+    with the character code of the sum of the previous character code and [inc]
 *)
 val from_char: char -> int -> char t
 
@@ -89,22 +90,23 @@ val range_int: int -> int -> int -> int t
 
 (**
     [range_int] returns a stream of [char]s with the first element being [start], each successive element being the
-    character with a code of the sum of the previous char code and [inc], and the final element being [finish]
+    character with the character code of the sum of the previous character code and [inc], and the final element being
+    [finish]
     @param start The starting [char] of the stream
-    @param inc   The increment added to each previous element's char code to get the char code of the next element
+    @param inc   The increment added to each previous element's character code to get the code of the next element
     @param final The ending [char] of the stream
-    @return A stream of [int]s with the first element being [start], each successive element being the previous element
-    plus [inc], and the final element being [finish]
+    @return A stream of [int]s with the first element being [start], each successive element being character with the
+    character code of the sum of the previous character code and [inc], and the final element being [finish]
 *)
 val range_char: char -> char -> int -> char t
 
 (**
-    [filter] returns a stream that only contains elements of the given stream that, when [filter_fn] is applied to the
-    element, it returns [true]
+    [filter] returns a stream that contains all of the elements from the given stream that return [true] when inputted
+    into [filter_fn]
     @param filter_fn The function used for filtering the given stream
     @param s         The stream to filter
-    @return A stream that only contains elements of the given stream that, when [filter_fn] is applied to the element,
-    it returns [true]
+    @return A stream that contains all of the elements from the given stream that return [true] when inputted
+    into [filter_fn]
 *)
 val filter: ('a -> bool) -> 'a t -> 'a t
 
@@ -122,8 +124,9 @@ val find_all: ('a -> bool) -> 'a t -> 'a t
 val append: 'a t -> 'a t -> 'a t
 
 (**
-    [append_lazy] concatenates a stream and another stream with its computation deferred, mainly used when it is desired
-    that the head of the second lazy stream should not be computed
+    [append_lazy] concatenates a stream and a computationally-deferred stream, mainly used when it is desired that the
+    head of the second lazy stream should not be computed until all of the elements from the first stream have been
+    iterated through
     @param s1 The stream on the left side of the concatenation
     @param s2 The stream on the right side of the concatenation with its computation deferred
     @return The concatenation of the given stream and computationally-deferred stream
@@ -132,7 +135,7 @@ val append_lazy: 'a t -> 'a t lazy_t -> 'a t
 
 (**
     [mapi] is the same as {!map}, but the function is applied to the index of the element as first argument (counting
-    from 0), and the element itself as second argument
+    from 0) and the element itself as second argument
     @param map_fn The mapping function to apply to each index-element pair
     @param s      The stream to map
     @return The stream created from mapping each index-element pair of the given stream
@@ -149,8 +152,8 @@ val mapi: (int -> 'a -> 'b) -> 'a t -> 'b t
 val map: ('a -> 'b) -> 'a t -> 'b t
 
 (**
-    [filter_map] applies [fm_fn] to every element of [s], filters out the [None] elements, and returns the stream of
-    the arguments of the [Some] elements
+    [filter_map] applies [fm_fn] to every element of [s], filters out the [None] elements, and returns the stream of the
+    arguments of the [Some] elements
     @param fm_fn The mapping function to apply to each element to return an [option]
     @param s     The stream on which to apply [filter_map]
     @return The result of applying [fm_map] to every element of [s] and filtering out the [None] elements
@@ -158,8 +161,8 @@ val map: ('a -> 'b) -> 'a t -> 'b t
 val filter_map: ('a -> 'b option) -> 'a t -> 'b t
 
 (**
-    [flat_map] maps each element to a substream using [fm_fn] and then returns each element of the substreams in turn in
-    a stream, using {!append} to concatenate each of the substreams
+    [flat_map] maps each element to a substream using [fm_fn] and then returns the stream resulting from concatenating
+    the substreams, using {!append} to concatenate the substreams
     @param fm_fn The mapping function to apply to each element to get a substream
     @param s     The stream on which to apply [flat_map]
     @return The result of mapping each element to a substream using [fm_fn] and then concatenating each of the
@@ -168,8 +171,8 @@ val filter_map: ('a -> 'b option) -> 'a t -> 'b t
 val flat_map: ('a -> 'b t) -> 'a t -> 'b t
 
 (**
-    [flat_map_lazy] maps each element to a substream using [fm_fn] and then returns each element of the substreams in
-    turn in a stream, using {!append_lazy} to concatenate each of the substreams
+    [flat_map_lazy] maps each element to a substream using [fm_fn] and then returns the stream resulting from
+    concatenating the substreams, using {!append_lazy} to concatenate the substreams
     @param fm_fn The mapping function to apply to each element to get a substream
     @param s     The stream on which to apply [flat_map]
     @return The result of mapping each element to a substream using [fm_fn] and then concatenating each of the
@@ -186,9 +189,9 @@ val flat_map_lazy: ('a -> 'b t) -> 'a t -> 'b t
     
     Examples (using a list-like representation for streams):
     
-    [map_mult [(fun x _ -> x); (fun x _ -> x + 1)] (fun _ -> ()) [1; 1; ...] = [1; 2; 1; 2;...]]
+    [map_mult [(fun x _ -> x); (fun x _ -> x + 1)] (Fun.const ()) [1; 1; ...] = [1; 2; 1; 2; ...]]
     
-    [map_mult [(fun _ sq -> sq); (fun x c -> x + sq)] (fun x -> x * x) [1; 2; 3; ...] = [1; 2; 4; 6; 9; 12; ...]]
+    [map_mult [(fun _ sq -> sq); (fun x sq -> x + sq)] (fun x -> x * x) [1; 2; 3; ...] = [1; 2; 4; 6; 9; 12; ...]]
     @param map_fns   The functions to apply to each element of [s] to make elements in the output stream
     @param shared_fn The function that produces the value that is shared among all of the functions in [map_fns]
     @param s         The stream on which to apply [map_mult]
@@ -209,13 +212,13 @@ val zip: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
 
 (**
     [zip_long] returns a stream that is the result of mapping pairs of elements from two given streams to an element in
-    the output stream, substituting placeholders for elements for the stream that runs out first and ending when both
+    the output stream, substituting placeholders for elements in the stream that runs out first and ending when both
     streams have run out of elements
     @param zip_fn The function used to map each element pair from [s1] and [s2] to an element in the output stream
     @param s1     The stream whose elements will be used as the first argument of [zip_fn]
     @param s2     The stream whose elements will be used as the second argument of [zip_fn]
-    @param s1_pl  The value to use as a placeholder for [s1] elements if [s1] is smaller in length than [s2]
-    @param s2_pl  The value to use as a placeholder for [s2] elements if [s2] is smaller in length than [s1]
+    @param s1_pl  The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
+    @param s2_pl  The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
     @return The result of mapping each pair of elements from the two given streams to a new element in the output stream
 *)
 val zip_long: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'a -> 'b -> 'c t
@@ -230,31 +233,30 @@ val zip_long: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'a -> 'b -> 'c t
 val hd: 'a t -> 'a
 
 (**
-    [tl] returns the given stream without its first element, raising [Failure "tl"] if there are no more elements in the
+    [tl] returns the given stream without its first element, raising [Failure "tl"] if there are no elements in the
     given stream
     @param s The stream from which to retrieve the tail
     @return The given stream without its first element
-    @raise Failure Raised if there are no more elements in the given stream
+    @raise Failure Raised if there are no elements in the given stream
 *)
 val tl: 'a t -> 'a t
 
 (**
-    [take] returns the first [n] elements of the given stream as a [list], and if there are less then [n] elements in
-    the stream, it returns what elements exist in the stream
+    [take] returns the first [n] elements of the given stream as a [list], but if there are less then [n] elements in
+    the stream, it returns the remaining elements from the stream
     @param n The number of elements to retrieve from the given stream
     @param s The stream from which to retrieve the elements
-    @return The first [n] elements of the given stream as a [list], and if there are less then [n] elements in the
-    stream, it returns what elements exist in the stream
+    @return The first [n] elements of the given stream as a [list], but if there are less then [n] elements in the
+    stream, it returns the remaining elements from the stream
 *)
 val take: int -> 'a t -> 'a list
 
 (**
-    [take_except] returns the first [n] elements of the given stream as a [list], and if there are less then [n]
+    [take_except] returns the first [n] elements of the given stream as a [list], but if there are less then [n]
     elements in the stream, it raises [Failure "take_except"]
     @param n The number of elements to retrieve from the given stream
     @param s The stream from which to retrieve the elements
-    @return The first [n] elements of the given stream as a [list], and if there are less then [n] elements in the
-    stream, it raises [Failure "take_except"]
+    @return The first [n] elements of the given stream as a [list]
     @raise Failure Raised if the given stream has less than [n] elements
 *)
 val take_except: int -> 'a t -> 'a list
@@ -270,17 +272,17 @@ val take_except: int -> 'a t -> 'a list
 val take_all: 'a t -> 'a list
 
 (**
-    [drop] returns the given stream without its first [n] elements, and if there are less than [n] elements in the
+    [drop] returns the given stream without its first [n] elements, but if there are less than [n] elements in the
     stream, then it simply returns [Nil]
     @param n The number of elements to drop from the given stream
     @param s The stream from which elements are dropped
-    @return The given stream without its first [n] elements, and if there are less than [n] elements in the stream, then
+    @return The given stream without its first [n] elements, but if there are less than [n] elements in the stream, then
     it simply returns [Nil]
 *)
 val drop: int -> 'a t -> 'a t
 
 (**
-    [drop_except] returns the given stream without its first [n] elements, and if there are less than [n] elements in
+    [drop_except] returns the given stream without its first [n] elements, but if there are less than [n] elements in
     the stream, then it raises [Failure "drop_except"]
     @param n The number of elements to drop from the given stream
     @param s The stream from which elements are dropped
@@ -384,8 +386,7 @@ val repeat_elements: int -> 'a t -> 'a t
 val repeat_stream: int -> 'a t -> 'a t
 
 (**
-    [cartesian_product] Returns a stream representing the cartesian product of two streams, which can be useful in
-    acting like a nested foreach loop
+    [cartesian_product] Returns a stream representing the cartesian product of two streams
     @param s1 The stream whose elements will each be the outer (first) element in the cartesian product
     @param s2 The stream whose elements will each be the inner (second) element in the cartesian product
     @return A stream representing the cartesian product of two streams
@@ -453,9 +454,9 @@ val fold_right: ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
 val length: 'a t -> int
 
 (**
-    [compare_lengths] compares the lengths of the tw given streams, and [compare_lengths s1 s2] is equivalent to
-    [compare (length s1) (length s2)] for two finite streams s1 and s2, except that the computation stops after
-    iterating on the shortest stream
+    [compare_lengths] compares the lengths of the two given streams, and [compare_lengths s1 s2] is equivalent to
+    [compare (length s1) (length s2)], except that the computation stops after iteration completes on the shortest
+    stream
     
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
@@ -489,7 +490,7 @@ val nth: 'a t -> int -> 'a
 (**
     [init] creates a stream whose elements are composed using calls to [init_fn] with the integers [0] through [len - 1]
     inclusive, raising [Invalid_arg "LazyStream.init"] if [len] is negative
-    @param len The final length of the stream
+    @param len     The final length of the stream
     @param init_fn The function used to map the integers [0] through [len - 1] to values of this stream
     @return The stream whose elements are composed using calls to [init_fn] with the integers [0] through [len - 1]
     inclusive
@@ -559,7 +560,7 @@ val flatten_lazy: 'a t t -> 'a t
 val iteri: (int -> 'a -> unit) -> 'a t -> unit
 
 (**
-    [iter] applies the function [iter_fn] to each element of the given stream
+    [iter] applies [iter_fn] to each element of the given stream
     
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
@@ -584,15 +585,15 @@ val combine: 'a t -> 'b t -> ('a * 'b) t
     one of the streams runs out of elements and ending when both streams run out of values
     @param s1    The stream whose elements each compose the first element in each pair
     @param s2    The stream whose elements each compose the second element in each pair
-    @param s1_pl The value to use as a placeholder for [s1] elements if [s1] is smaller in length than [s2]
-    @param s2_pl The value to use as a placeholder for [s2] elements if [s2] is smaller in length than [s1]
+    @param s1_pl The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
+    @param s2_pl The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
     @return The stream of pairs composed from the pair of streams [s1] and [s2], using placeholder values when one of
     the streams runs out of elements, ending when both streams run out of values
 *)
 val combine_long: 'a t -> 'b t -> 'a -> 'b -> ('a * 'b) t
 
 (**
-    [iter2] applies the function [iter_fn] to each pair of elements from the given streams and ending when one of the
+    [iter2] applies the function [iter_fn] to each pair of elements from the given streams, ending when one of the
     streams runs out of elements
     
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
@@ -613,6 +614,8 @@ val iter2: ('a -> 'b -> unit) -> 'a t -> 'b t -> unit
     @param iter_fn The iter function to apply to each pair of elements
     @param s1      The stream whose elements each compose the first element in each pair that is iterated over
     @param s2      The stream whose elements each compose the second element in each pair that is iterated over
+    @param s1_pl The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
+    @param s2_pl The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
     @return unit
 *)
 val iter2_long: ('a -> 'b -> unit) -> 'a t -> 'b t -> 'a -> 'b -> unit
@@ -634,6 +637,8 @@ val map2: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
     @param map_fn The mapping function to apply to each pair of elements
     @param s1     The stream whose elements each compose the first element in each pair that is used in the mapping
     @param s2     The stream whose elements each compose the second element in each pair that is used in the mapping
+    @param s1_pl The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
+    @param s2_pl The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
     @return The stream created from mapping each pair of elements from the given streams
 *)
 val map2_long: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'a -> 'b -> 'c t
@@ -644,20 +649,22 @@ val map2_long: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'a -> 'b -> 'c t
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
     @param map_fn The mapping function to apply to each pair of elements
-    @param s1      The stream whose elements each compose the first element in each pair that is used in the mapping
-    @param s2      The stream whose elements each compose the second element in each pair that is used in the mapping
+    @param s1     The stream whose elements each compose the first element in each pair that is used in the mapping
+    @param s2     The stream whose elements each compose the second element in each pair that is used in the mapping
     @return The stream created reversing the result of [map2 map_fn s1 s2]
 *)
 val rev_map2: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
 
 (**
-    [rev_map2_long] is equivalent to [rev (map2_long map_fn s1 s2)]
+    [rev_map2_long] is equivalent to [rev (map2_long map_fn s1 s2 s1_pl s2_pl)]
     
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
     @param map_fn The mapping function to apply to each pair of elements
-    @param s1      The stream whose elements each compose the first element in each pair that is used in the mapping
-    @param s2      The stream whose elements each compose the second element in each pair that is used in the mapping
+    @param s1     The stream whose elements each compose the first element in each pair that is used in the mapping
+    @param s2     The stream whose elements each compose the second element in each pair that is used in the mapping
+    @param s1_pl The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
+    @param s2_pl The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
     @return The stream created reversing the result of [map2_long map_fn s1 s2]
 *)
 val rev_map2_long: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'a -> 'b -> 'c t
@@ -669,6 +676,7 @@ val rev_map2_long: ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'a -> 'b -> 'c t
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
     @param map_fn The mapping function to apply to each pair of elements
+    @param acc    The initial value to use as the accumulator with [fold_fn]
     @param s1     The stream whose elements each compose the first element in each pair that is used in the mapping
     @param s2     The stream whose elements each compose the second element in each pair that is used in the mapping
     @return The stream created from mapping each pair of elements from the given streams
@@ -680,6 +688,7 @@ val fold_left2: ('c -> 'a -> 'b -> 'c) -> 'c -> 'a t -> 'b t -> 'c
     returns each intermediary result in a stream from [acc] to the result of completely applying [fold_left] to the
     entire stream, ending when one of the streams runs out of elements
     @param map_fn The mapping function to apply to each pair of elements
+    @param acc    The initial value to use as the accumulator with [fold_fn]
     @param s1     The stream whose elements each compose the first element in each pair that is used in the mapping
     @param s2     The stream whose elements each compose the second element in each pair that is used in the mapping
     @return The stream created from mapping each pair of elements from the given streams
@@ -694,8 +703,11 @@ val fold_left2_lazy: ('c -> 'a -> 'b -> 'c) -> 'c -> 'a t -> 'b t -> 'c t
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
     @param map_fn The mapping function to apply to each pair of elements
+    @param acc    The initial value to use as the accumulator with [fold_fn]
     @param s1     The stream whose elements each compose the first element in each pair that is used in the mapping
     @param s2     The stream whose elements each compose the second element in each pair that is used in the mapping
+    @param s1_pl The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
+    @param s2_pl The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
     @return The stream created from mapping each pair of elements from the given streams
 *)
 val fold_left2_long: ('c -> 'a -> 'b -> 'c) -> 'c -> 'a t -> 'b t -> 'a -> 'b -> 'c
@@ -706,8 +718,11 @@ val fold_left2_long: ('c -> 'a -> 'b -> 'c) -> 'c -> 'a t -> 'b t -> 'a -> 'b ->
     entire stream, using placeholder values when one of the streams runs out of elements and ending when both streams
     run out of values
     @param map_fn The mapping function to apply to each pair of elements
+    @param acc    The initial value to use as the accumulator with [fold_fn]
     @param s1     The stream whose elements each compose the first element in each pair that is used in the mapping
     @param s2     The stream whose elements each compose the second element in each pair that is used in the mapping
+    @param s1_pl The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
+    @param s2_pl The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
     @return The stream created from mapping each pair of elements from the given streams
 *)
 val fold_left2_long_lazy: ('c -> 'a -> 'b -> 'c) -> 'c -> 'a t -> 'b t -> 'a -> 'b -> 'c t
@@ -741,7 +756,8 @@ val exists: ('a -> bool) -> 'a t -> bool
     This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
     and not terminating on infinite streams
     @param pred The predicate that all of the elements are checked against
-    @param s    The stream whose elements are checked against the predicate
+    @param s1   The stream whose elements are used as the first argument when checking against the predicate
+    @param s2   The stream whose elements are used as the second argument when checking against the predicate
     @return [true] if all of the adjacent elements from the given streams each return [true] when put into [pred]
 *)
 val for_all2: ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
@@ -753,7 +769,8 @@ val for_all2: ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
     This involves an immediate traversal over all of the elements until an element meeting the predicate is found,
     evaluating each of them, and not terminating on infinite streams in which no element matches the predicate
     @param pred The predicate that all of the elements are checked against
-    @param s    The stream whose elements are checked against the predicate
+    @param s1   The stream whose elements are used as the first argument when checking against the predicate
+    @param s2   The stream whose elements are used as the second argument when checking against the predicate
     @return [true] if any of the adjacent element pairs from the given streams return [true] when put into [pred]
 *)
 val exists2: ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
@@ -781,14 +798,15 @@ val mem: 'a -> 'a t -> bool
 val memq: 'a -> 'a t -> bool
 
 (**
-    [find_opt] returns the first element of [s] that satisfies [pred] wrapped in [Some] or [None] if there is no such
-    element
+    [find_opt] returns the first element of [s] that satisfies [pred] wrapped in [Some] or returns [None] if there is
+    no such element
     
     This involves an immediate traversal over all of the elements until an element meeting the predicate is found,
     evaluating each of them, and not terminating on infinite streams in which no element matches the predicate
     @param pred The predicate that all of the elements are checked against
     @param s    The stream that is searched through for an element that satisfies the predicate
-    @return The first element of [s] that satisfies [pred] wrapped in [Some] or [None] if there is no such element
+    @return The first element of [s] that satisfies [pred] wrapped in [Some] or returns [None] if there is no such
+    element
 *)
 val find_opt: ('a -> bool) -> 'a t -> 'a option
 
@@ -858,10 +876,10 @@ val assoc: 'a -> ('a * 'b) t -> 'b
 
 (**
     [assq_opt] is the same as {!assoc_opt} but uses physical equality instead of structural equality to compare elements
-    @param el_key The key that is searched for in the association stream
     
     This involves an immediate traversal over all of the elements until an element with an equivalent key is found,
     evaluating each of them, and not terminating on infinite streams in which no element has an equivalent key
+    @param el_key The key that is searched for in the association stream
     @param as_s   The association stream that is searched through
     @return The value associated with [el_key] in the stream of pairs [as_s] wrapped in [Some] or [None] if there is no
     value associated with [el_key] in the [as_s]

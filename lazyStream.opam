@@ -3,9 +3,9 @@ name: "lazyStream"
 version: "1.0"
 synopsis: "Data structure like Seq but more lazily evaluated"
 description: """
-lazyStream is like Seq but more lazily evaluated, though calling a function with
-the same parameters multiple times will create different streams and will be
-evaluated separately
+lazyStream is like Seq and Stream but more lazily evaluated, though calling a
+function with the same parameters multiple times will create different streams
+and will be evaluated separately, and more provided functions
 """
 maintainer: "Nikunj Chawla <nikchawla312@gmail.com>"
 authors: "Nikunj Chawla <nikchawla312@gmail.com>"
