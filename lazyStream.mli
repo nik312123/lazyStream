@@ -26,7 +26,7 @@
 (**
     The type associated with {!LazyStream}
     
-    [Nil] indicates the end of the list as [[]] does for [list]s
+    [Nil] indicates the end of the stream as [[]] does for [list]s
     [Cons] is similar to [::] for [list]s, though [Cons] has an eagerly-evaluated head and a lazily-evaluated tail
 *)
 type 'a t = Nil | Cons of 'a * 'a t lazy_t
