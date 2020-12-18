@@ -994,6 +994,7 @@ val equals: ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
     and not terminating on infinite streams
     @param compare_fn The comparison function described above
     @param s          The stream to be sorted
+    @return The sorted stream in increasing order according to a [compare_fn] function
 *)
 val sort: ('a -> 'a -> int) -> 'a t -> 'a t
 
@@ -1004,6 +1005,7 @@ val sort: ('a -> 'a -> int) -> 'a t -> 'a t
     and not terminating on infinite streams
     @param compare_fn The comparison function as described in {!sort}
     @param s          The stream to be sorted
+    @return The sorted stream in increasing order according to a [compare_fn] function
 *)
 val stable_sort: ('a -> 'a -> int) -> 'a t -> 'a t
 
@@ -1014,6 +1016,7 @@ val stable_sort: ('a -> 'a -> int) -> 'a t -> 'a t
     and not terminating on infinite streams
     @param compare_fn The comparison function as described in {!sort}
     @param s          The stream to be sorted
+    @return The sorted stream in increasing order according to a [compare_fn] function
 *)
 val fast_sort: ('a -> 'a -> int) -> 'a t -> 'a t
 
@@ -1024,6 +1027,7 @@ val fast_sort: ('a -> 'a -> int) -> 'a t -> 'a t
     and not terminating on infinite streams
     @param compare_fn The comparison function as described in {!sort}
     @param s          The stream to be sorted
+    @return The sorted stream in increasing order according to a [compare_fn] function
 *)
 val sort_uniq: ('a -> 'a -> int) -> 'a t -> 'a t
 
