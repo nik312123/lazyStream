@@ -204,16 +204,17 @@ val flat_map_lazy: ('a -> 'b t) -> 'a t -> 'b t
     
     Examples (using a list-like representation for streams):
     
-    [map_mult [(fun x _ -> x); (fun x _ -> x + 1)] (Fun.const ()) [1; 1; ...] = [1; 2; 1; 2; ...]]
+    [map_mult [(fun _ x -> x); (fun _ x -> x + 1)] (Fun.const ()) [1; 1; ...] = [1; 2; 1; 2; ...]]
     
-    [map_mult [(fun _ sq -> sq); (fun x sq -> x + sq)] (fun x -> x * x) [1; 2; 3; ...] = [1; 2; 4; 6; 9; 12; ...]]
-    @param map_fns   The functions to apply to each element of [s] to make elements in the output stream
+    [map_mult [(fun sq _ -> sq); (fun sq x -> x + sq)] (fun x -> x * x) [1; 2; 3; ...] = [1; 2; 4; 6; 9; 12; ...]]
+    @param map_fns   The functions to apply to the shared element created from each element of [s] and the element of
+                     [s] to make elements in the output stream
     @param shared_fn The function that produces the value that is shared among all of the functions in [map_fns]
     @param s         The stream on which to apply [map_mult]
     @return The result of mapping all of the functions in [map_fns] to each element in [s], using the value produced
     from [shared_fn] as one of the inputs to each function in [map_fns]
 *)
-val map_mult: ('a -> 'c -> 'b) list -> ('a -> 'c) -> 'a t -> 'b t
+val map_mult: ('c -> 'a -> 'b) list -> ('a -> 'c) -> 'a t -> 'b t
 
 (**
     [zip] returns a stream that is the result of mapping pairs of elements from two given streams to an element in the

@@ -85,11 +85,11 @@ let rec flat_map_lazy (fm_fn: 'a -> 'b t): 'a t -> 'b t = function
     | Nil -> Nil
     | Cons(x, xs) -> append_lazy (fm_fn x) (lazy (flat_map_lazy fm_fn (Lazy.force xs)))
 
-let rec map_mult_aux (rest_map_fns: ('a -> 'c -> 'b) list) (shared: 'c) (el: 'a): 'b t = match rest_map_fns with
+let rec map_mult_aux (rest_map_fns: ('c -> 'a -> 'b) list) (shared: 'c) (el: 'a): 'b t = match rest_map_fns with
     | [] -> Nil
-    | map_fn::map_fns' -> Cons (map_fn el shared, lazy (map_mult_aux map_fns' shared el))
+    | map_fn::map_fns' -> Cons (map_fn shared el, lazy (map_mult_aux map_fns' shared el))
 
-let rec map_mult (map_fns: ('a -> 'c -> 'b) list) (shared_fn: 'a -> 'c): 'a t -> 'b t = function
+let rec map_mult (map_fns: ('c -> 'a -> 'b) list) (shared_fn: 'a -> 'c): 'a t -> 'b t = function
     | Nil -> Nil
     | Cons (x, xs) ->
         append_lazy (map_mult_aux map_fns (shared_fn x) x) (lazy (map_mult map_fns shared_fn (Lazy.force xs)))
