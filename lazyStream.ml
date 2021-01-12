@@ -347,7 +347,7 @@ let memq (el: 'a): 'a t -> bool = exists ((==) el)
 
 let find_opt (pred: 'a -> bool): 'a t -> 'a option = find_map Option.some None pred
 
-let find (pred: 'a -> bool) (s: 'a t) = find_opt pred s |> opt_get_nf
+let find (pred: 'a -> bool) (s: 'a t): 'a = find_opt pred s |> opt_get_nf
 
 let rec partition_lazy (pred: 'a -> bool): 'a t -> 'a t lazy_t * 'a t lazy_t = function
     | Nil -> lazy Nil, lazy Nil
