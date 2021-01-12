@@ -779,6 +779,22 @@ val exists: ('a -> bool) -> 'a t -> bool
 val for_all2: ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
 
 (**
+    [for_all2_long] returns [true] if applying [pred] to each pair of adjacent element pairs from the given streams
+    results in [true] for all of them, using placeholder values when one of the streams runs out of elements and ending
+    when both streams run out of values
+    
+    This involves an immediate traversal over all of the elements, evaluating each of them before getting to the end,
+    and not terminating on infinite streams
+    @param pred The predicate that all of the elements are checked against
+    @param s1   The stream whose elements are used as the first argument when checking against the predicate
+    @param s2   The stream whose elements are used as the second argument when checking against the predicate
+    @param s1_pl The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
+    @param s2_pl The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
+    @return [true] if all of the adjacent elements from the given streams each return [true] when put into [pred]
+*)
+    val for_all2_long: ('a -> 'b -> bool) -> 'a t -> 'b t -> 'a -> 'b -> bool
+
+(**
     [exists2] returns [true] if applying [pred] to any of the adjacent element pairs from the given streams results in
     [true]
     
@@ -790,6 +806,22 @@ val for_all2: ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
     @return [true] if any of the adjacent element pairs from the given streams return [true] when put into [pred]
 *)
 val exists2: ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
+
+(**
+    [exists2_long] returns [true] if applying [pred] to any of the adjacent element pairs from the given streams results
+    in [true], using placeholder values when one of the streams runs out of elements and ending when both streams run
+    out of values
+    
+    This involves an immediate traversal over all of the elements until an element meeting the predicate is found,
+    evaluating each of them, and not terminating on infinite streams in which no element matches the predicate
+    @param pred The predicate that all of the elements are checked against
+    @param s1   The stream whose elements are used as the first argument when checking against the predicate
+    @param s2   The stream whose elements are used as the second argument when checking against the predicate
+    @param s1_pl The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
+    @param s2_pl The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
+    @return [true] if any of the adjacent element pairs from the given streams return [true] when put into [pred]
+*)
+    val exists2_long: ('a -> 'b -> bool) -> 'a t -> 'b t -> 'a -> 'b -> bool
 
 (**
     [mem] returns [true] if [el] is equal to an element in the given stream
