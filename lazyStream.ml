@@ -426,6 +426,6 @@ let rec merge (compare_fn: 'a -> 'a -> int) (s1: 'a t) (s2: 'a t): 'a t = match 
     | _, Nil -> s1
     | Cons (s1_el, s1'), Cons (s2_el, s2') ->
         let comparison = compare_fn s1_el s2_el in
-        if comparison < 0
+        if comparison <= 0
         then Cons (s1_el, lazy (merge compare_fn (Lazy.force s1') s2))
         else Cons (s2_el, lazy (merge compare_fn s1 (Lazy.force s2')))
