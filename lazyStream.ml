@@ -332,8 +332,14 @@ let exists (pred: 'a -> bool): 'a t -> bool = find_map (Fun.const true) false pr
 let for_all2 (pred: 'a -> 'b -> bool) (s1: 'a t) (s2: 'b t): bool =
     for_all (args_fn_to_pair_fn pred) (combine s1 s2)
 
+let for_all2_long (pred: 'a -> 'b -> bool) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): bool =
+    for_all (args_fn_to_pair_fn pred) (combine_long s1 s2 s1_pl s2_pl)
+
 let exists2 (pred: 'a -> 'b -> bool) (s1: 'a t) (s2: 'b t): bool =
     exists (args_fn_to_pair_fn pred) (combine s1 s2)
+
+let exists2_long (pred: 'a -> 'b -> bool) (s1: 'a t) (s2: 'b t) (s1_pl: 'a) (s2_pl: 'b): bool =
+    exists (args_fn_to_pair_fn pred) (combine_long s1 s2 s1_pl s2_pl)
 
 let mem (el: 'a): 'a t -> bool = exists ((=) el)
 
