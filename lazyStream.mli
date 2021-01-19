@@ -571,7 +571,7 @@ val flatten_lazy: 'a t t -> 'a t
     and not terminating on infinite streams
     @param iter_fn The iter function to apply to each index-element pair
     @param s       The stream over which to iterate
-    @return unit
+    @return Unit
 *)
 val iteri: (int -> 'a -> unit) -> 'a t -> unit
 
@@ -582,7 +582,7 @@ val iteri: (int -> 'a -> unit) -> 'a t -> unit
     and not terminating on infinite streams
     @param iter_fn The iter function to apply to each element
     @param s       The stream over which to iterate
-    @return unit
+    @return Unit
 *)
 val iter: ('a -> unit) -> 'a t -> unit
 
@@ -617,7 +617,7 @@ val combine_long: 'a t -> 'b t -> 'a -> 'b -> ('a * 'b) t
     @param iter_fn The iter function to apply to each pair of elements
     @param s1      The stream whose elements each compose the first element in each pair that is iterated over
     @param s2      The stream whose elements each compose the second element in each pair that is iterated over
-    @return unit
+    @return Unit
 *)
 val iter2: ('a -> 'b -> unit) -> 'a t -> 'b t -> unit
 
@@ -632,7 +632,7 @@ val iter2: ('a -> 'b -> unit) -> 'a t -> 'b t -> unit
     @param s2      The stream whose elements each compose the second element in each pair that is iterated over
     @param s1_pl The value to use as a placeholder for [s1] elements if [s1] has less elements than [s2]
     @param s2_pl The value to use as a placeholder for [s2] elements if [s2] has less elements than [s1]
-    @return unit
+    @return Unit
 *)
 val iter2_long: ('a -> 'b -> unit) -> 'a t -> 'b t -> 'a -> 'b -> unit
 
