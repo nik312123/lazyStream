@@ -85,8 +85,8 @@ val from_char: char -> int -> char t
     [range] returns a stream with the first element being [start], all successive elements being the result
     of applying [next] to the previous element, and the final element being [final]
     @param start The starting element of the stream
-    @param next  The function applied to each previous element of the stream to get the next element
     @param final The ending element of the stream
+    @param next  The function applied to each previous element of the stream to get the next element
     @return A stream with the first element being [start], each successive element being the result of applying [next]
     to the previous element, and the final element being [finish]
 *)
@@ -96,20 +96,20 @@ val range: 'a -> 'a -> ('a -> 'a) -> 'a t
     [range_int] returns a stream of [int]s with the first element being [start], each successive element being the
     previous element plus [inc], and the final element being [finish]
     @param start The starting [int] of the stream
-    @param inc   The increment added to each previous element to get the next element
     @param final The ending [int] of the stream
+    @param inc   The increment added to each previous element to get the next element
     @return A stream of [int]s with the first element being [start], each successive element being the previous element
     plus [inc], and the final element being [finish]
 *)
 val range_int: int -> int -> int -> int t
 
 (**
-    [range_int] returns a stream of [char]s with the first element being [start], each successive element being the
+    [range_char] returns a stream of [char]s with the first element being [start], each successive element being the
     character with the character code of the sum of the previous character code and [inc], and the final element being
     [finish]
     @param start The starting [char] of the stream
-    @param inc   The increment added to each previous element's character code to get the code of the next element
     @param final The ending [char] of the stream
+    @param inc   The increment added to each previous element's character code to get the code of the next element
     @return A stream of [int]s with the first element being [start], each successive element being character with the
     character code of the sum of the previous character code and [inc], and the final element being [finish]
 *)
